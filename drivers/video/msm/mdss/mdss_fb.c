@@ -452,6 +452,7 @@ static ssize_t mdss_set_rgb(struct device *dev,
 	pcc_cfg.g.g = g;
 	pcc_cfg.b.b = b;
 
+	int ret;
 	ret = mdss_mdp_pcc_config(&pcc_cfg, &copyback);
 	if (ret != 0)
 		return ret;
