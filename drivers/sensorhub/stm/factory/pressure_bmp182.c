@@ -14,7 +14,7 @@
  */
 #include "../ssp.h"
 
-#if defined (CONFIG_SEC_KACTIVE_PROJECT) && !defined (CONFIG_MACH_KACTIVELTE_DCM)
+#if defined (CONFIG_SEC_KACTIVE_PROJECT)
 #define LPS25H_REV	0
 #else
 #define LPS25H_REV	3

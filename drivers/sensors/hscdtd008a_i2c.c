@@ -542,15 +542,13 @@ static ssize_t mag_raw_data_read(struct device *dev,
 
 	alps_dbgmsg("is called\n");
 
-	if (!atomic_read(&flgEna)) {
-		hscd_activate(0, 1, 100);
-		msleep(20);
-	}
+	if (!atomic_read(&flgEna))
+		hscd_power_on(1);
 
 	hscd_get_magnetic_field_data(xyz);
 
-	if (!atomic_read(&flgEna))
-		hscd_activate(0, 0, 100);
+	/*if (!atomic_read(&flgEna))
+		hscd_power_off();*/
 
 	return snprintf(buf, PAGE_SIZE, "%d,%d,%d\n",
 					xyz[0], xyz[1], xyz[2]);
@@ -728,7 +726,7 @@ static int hscd_suspend(struct i2c_client *client, pm_message_t mesg)
 	atomic_set(&flgSuspend, 1);
 	if (atomic_read(&flgEna))
 		hscd_activate(0, 0, atomic_read(&delay));
-#if !(defined(CONFIG_MACH_CRATERQ_CHN_OPEN)||defined(CONFIG_MACH_MS01_CHN_CTC)||defined(CONFIG_MACH_BAFFIN2_CHN_CMCC) || defined(CONFIG_SEC_GNOTE_PROJECT) )
+#if !(defined(CONFIG_MACH_CRATERQ_CHN_OPEN)||defined(CONFIG_MACH_MS01_CHN_CTC)||defined(CONFIG_MACH_BAFFIN2_CHN_CMCC))
 	hscd_power_on(0);
 #endif
 	return 0;
@@ -739,11 +737,9 @@ static int hscd_resume(struct i2c_client *client)
 	alps_info("is called\n");
 
 	atomic_set(&flgSuspend, 0);
-	if (atomic_read(&flgEna)) {
-		atomic_set(&flgEna, 0);
-		hscd_activate(1, 1 , atomic_read(&delay));
-	}
-#if !(defined(CONFIG_MACH_CRATERQ_CHN_OPEN)||defined(CONFIG_MACH_MS01_CHN_CTC)||defined(CONFIG_MACH_BAFFIN2_CHN_CMCC) || defined(CONFIG_SEC_GNOTE_PROJECT) ) 
+	if (atomic_read(&flgEna))
+		hscd_activate(0, atomic_read(&flgEna), atomic_read(&delay));
+#if !(defined(CONFIG_MACH_CRATERQ_CHN_OPEN)||defined(CONFIG_MACH_MS01_CHN_CTC)||defined(CONFIG_MACH_BAFFIN2_CHN_CMCC)) 
 	hscd_power_on(1);
 #endif
 	return 0;

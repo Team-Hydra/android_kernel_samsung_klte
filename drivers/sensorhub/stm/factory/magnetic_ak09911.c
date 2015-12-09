@@ -43,18 +43,18 @@ static ssize_t magnetic_name_show(struct device *dev,
 	return sprintf(buf, "%s\n", CHIP_ID_AK);
 }
 
-static int check_data_spec(struct ssp_data *data, u8 uSensorType)
+static int check_data_spec(struct ssp_data *data)
 {
-	if ((data->buf[uSensorType].x == 0) &&
-		(data->buf[uSensorType].y == 0) &&
-		(data->buf[uSensorType].z == 0))
+	if ((data->buf[GEOMAGNETIC_RAW].x == 0) &&
+		(data->buf[GEOMAGNETIC_RAW].y == 0) &&
+		(data->buf[GEOMAGNETIC_RAW].z == 0))
 		return FAIL;
-	else if ((data->buf[uSensorType].x > GM_DATA_SPEC_MAX)
-		|| (data->buf[uSensorType].x < GM_DATA_SPEC_MIN)
-		|| (data->buf[uSensorType].y > GM_DATA_SPEC_MAX)
-		|| (data->buf[uSensorType].y < GM_DATA_SPEC_MIN)
-		|| (data->buf[uSensorType].z > GM_DATA_SPEC_MAX)
-		|| (data->buf[uSensorType].z < GM_DATA_SPEC_MIN))
+	else if ((data->buf[GEOMAGNETIC_RAW].x > GM_DATA_SPEC_MAX)
+		|| (data->buf[GEOMAGNETIC_RAW].x < GM_DATA_SPEC_MIN)
+		|| (data->buf[GEOMAGNETIC_RAW].y > GM_DATA_SPEC_MAX)
+		|| (data->buf[GEOMAGNETIC_RAW].y < GM_DATA_SPEC_MIN)
+		|| (data->buf[GEOMAGNETIC_RAW].z > GM_DATA_SPEC_MAX)
+		|| (data->buf[GEOMAGNETIC_RAW].z < GM_DATA_SPEC_MIN))
 		return FAIL;
 	else
 		return SUCCESS;
@@ -98,7 +98,7 @@ static ssize_t raw_data_show(struct device *dev,
 static ssize_t raw_data_store(struct device *dev,
 	struct device_attribute *attr, const char *buf, size_t size)
 {
-	char chTempbuf[9] = { 0, };
+	char chTempbuf[4] = { 0 };
 	int iRet;
 	int64_t dEnable;
 	int iRetries = 50;
@@ -116,11 +116,11 @@ static ssize_t raw_data_store(struct device *dev,
 		data->buf[GEOMAGNETIC_RAW].z = 0;
 
 		send_instruction(data, ADD_SENSOR, GEOMAGNETIC_RAW,
-			chTempbuf, 9);
+			chTempbuf, 4);
 
 		do {
 			msleep(20);
-			if (check_data_spec(data, GEOMAGNETIC_RAW) == SUCCESS)
+			if (check_data_spec(data) == SUCCESS)
 				break;
 		} while (--iRetries);
 
@@ -145,10 +145,9 @@ static ssize_t adc_data_read(struct device *dev,
 	struct device_attribute *attr, char *buf)
 {
 	bool bSuccess = false;
-	u8 chTempbuf[9] = { 0, };
+	u8 chTempbuf[4] = { 0 };
 	s16 iSensorBuf[3] = {0, };
 	int iRetries = 10;
-	bool add_mag = false;
 	struct ssp_data *data = dev_get_drvdata(dev);
 	s32 dMsDelay = 20;
 	memcpy(&chTempbuf[0], &dMsDelay, 4);
@@ -157,15 +156,13 @@ static ssize_t adc_data_read(struct device *dev,
 	data->buf[GEOMAGNETIC_SENSOR].y = 0;
 	data->buf[GEOMAGNETIC_SENSOR].z = 0;
 
-	if (!(atomic_read(&data->aSensorEnable) & (1 << GEOMAGNETIC_SENSOR))) {
+	if (!(atomic_read(&data->aSensorEnable) & (1 << GEOMAGNETIC_SENSOR)))
 		send_instruction(data, ADD_SENSOR, GEOMAGNETIC_SENSOR,
-			chTempbuf, 9);
-		add_mag = true;
-	}
+			chTempbuf, 4);
 
 	do {
 		msleep(60);
-		if (check_data_spec(data, GEOMAGNETIC_SENSOR) == SUCCESS)
+		if (check_data_spec(data) == SUCCESS)
 			break;
 	} while (--iRetries);
 
@@ -176,7 +173,7 @@ static ssize_t adc_data_read(struct device *dev,
 	iSensorBuf[1] = data->buf[GEOMAGNETIC_SENSOR].y;
 	iSensorBuf[2] = data->buf[GEOMAGNETIC_SENSOR].z;
 
-	if (add_mag == true)
+	if (!(atomic_read(&data->aSensorEnable) & (1 << GEOMAGNETIC_SENSOR)))
 		send_instruction(data, REMOVE_SENSOR, GEOMAGNETIC_SENSOR,
 			chTempbuf, 4);
 
@@ -264,7 +261,7 @@ static ssize_t magnetic_get_selftest(struct device *dev,
 {
 	s8 iResult[4] = {-1, -1, -1, -1};
 	char bufSelftset[22] = {0, };
-	char bufAdc[9] = {0, };
+	char bufAdc[4] = {0, };
 	s16 iSF_X = 0, iSF_Y = 0, iSF_Z = 0;
 	s16 iADC_X = 0, iADC_Y = 0, iADC_Z = 0;
 	s32 dMsDelay = 20;
@@ -359,11 +356,11 @@ Retry_selftest:
 
 	if (!(atomic_read(&data->aSensorEnable) & (1 << GEOMAGNETIC_RAW)))
 		send_instruction(data, ADD_SENSOR, GEOMAGNETIC_RAW,
-			bufAdc, 9);
+			bufAdc, 4);
 
 	do {
 		msleep(60);
-		if (check_data_spec(data, GEOMAGNETIC_RAW) == SUCCESS)
+		if (check_data_spec(data) == SUCCESS)
 			break;
 	} while (--iSpecOutRetries);
 

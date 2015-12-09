@@ -56,9 +56,6 @@ ssize_t mcu_update_kernel_bin_show(struct device *dev,
 	else
 		bSuccess = false;
 out:
-	data->uCurFirmRev = get_firmware_rev(data);
-	pr_info("[SSP] %s: MCU Firm Rev : New = %8u\n",
-		__func__, data->uCurFirmRev);
 	return sprintf(buf, "%s\n", (bSuccess ? "OK" : "NG"));
 }
 
@@ -101,9 +98,6 @@ ssize_t mcu_update_ums_bin_show(struct device *dev,
 	else
 		bSuccess = false;
 
-	data->uCurFirmRev = get_firmware_rev(data);
-	pr_info("[SSP] %s: MCU Firm Rev : New = %8u\n",
-		__func__, data->uCurFirmRev);
 	return sprintf(buf, "%s\n", (bSuccess ? "OK" : "NG"));
 }
 
