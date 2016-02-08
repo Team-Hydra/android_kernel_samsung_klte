@@ -562,7 +562,7 @@ static const struct soc_enum msm8960_enum[] = {
 	SOC_ENUM_SINGLE_EXT(2, hdmi_rate),
 };
 
-static const char *btsco_rate_text[] = {"8000", "16000"};
+static const char *btsco_rate_text[] = {"BTSCO_RATE_8KHZ", "BTSCO_RATE_16KHZ"};
 static const struct soc_enum msm8960_btsco_enum[] = {
 		SOC_ENUM_SINGLE_EXT(2, btsco_rate_text),
 };
@@ -622,10 +622,10 @@ static int msm8960_btsco_rate_put(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol)
 {
 	switch (ucontrol->value.integer.value[0]) {
-	case 8000:
+	case 0:
 		msm8960_btsco_rate = SAMPLE_RATE_8KHZ;
 		break;
-	case 16000:
+	case 1:
 		msm8960_btsco_rate = SAMPLE_RATE_16KHZ;
 		break;
 	default:
